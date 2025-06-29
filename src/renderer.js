@@ -2,6 +2,7 @@ const { ipcRenderer } = require('electron');
 const Store = require('electron-store');
 const store = new Store();
 const fs = require('fs');
+const path = require('path');
 
 let audioContext = null;
 let audioBuffer = null;
@@ -21,20 +22,69 @@ enabledToggle.checked = store.get('isEnabled');
 volumeSlider.value = store.get('volume');
 autoStartToggle.checked = store.get('autoStart');
 
+// Function to validate a sound profile
+function validateSoundProfile(profileId) {
+  try {
+    const soundDir = path.join(__dirname, '../assets/sounds/audio', profileId);
+    const configPath = path.join(soundDir, 'config.json');
+
+    // Check if config.json exists
+    if (!fs.existsSync(configPath)) {
+      return false;
+    }
+
+    // Read and validate config.json
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    if (!config.sound) {
+      return false;
+    }
+
+    // Check if the sound file exists
+    const soundPath = path.join(soundDir, config.sound);
+    if (!fs.existsSync(soundPath)) {
+      return false;
+    }
+
+    // Check if it's an .ogg file
+    if (!soundPath.toLowerCase().endsWith('.ogg')) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error(`Error validating sound profile ${profileId}:`, error);
+    return false;
+  }
+}
+
 // Available sound profiles
-const soundProfiles = [
-  { id: 'cherry-mx-black-abs', name: 'Cherry MX Black (ABS)', type: 'mechvibes' },
-  { id: 'akko-silver', name: 'Akko CS Silver', type: 'legacy' },
-  { id: 'gateron-black', name: 'Gateron Black Ink', type: 'legacy' },
-  { id: 'nk-cream', name: 'NovelKeys Cream', type: 'legacy' },
-  { id: 'boba-u4t', name: 'Gazzew Boba U4T', type: 'legacy' },
-  { id: 'alpaca', name: 'Alpaca Linear', type: 'legacy' },
-  { id: 'tangerine', name: 'C³ Tangerine', type: 'legacy' },
-  { id: 'holy-panda', name: 'Drop Holy Panda', type: 'legacy' },
-  { id: 'click', name: 'Simple Click', type: 'legacy' }
+const allSoundProfiles = [
+  { id: 'cherrymx-black-abs', name: 'Cherry MX Black (ABS)', type: 'mechvibes' },
+  { id: 'cherrymx-black-pbt', name: 'Cherry MX Black (PBT)', type: 'mechvibes' },
+  { id: 'cherrymx-blue-abs', name: 'Cherry MX Blue (ABS)', type: 'mechvibes' },
+  { id: 'cherrymx-blue-pbt', name: 'Cherry MX Blue (PBT)', type: 'mechvibes' },
+  { id: 'cherrymx-brown-abs', name: 'Cherry MX Brown (ABS)', type: 'mechvibes' },
+  { id: 'cherrymx-brown-pbt', name: 'Cherry MX Brown (PBT)', type: 'mechvibes' },
+  { id: 'cherrymx-red-abs', name: 'Cherry MX Red (ABS)', type: 'mechvibes' },
+  { id: 'cherrymx-red-pbt', name: 'Cherry MX Red (PBT)', type: 'mechvibes' },
+  { id: 'cream-travel', name: 'NK Cream (Travel)', type: 'mechvibes' },
+  { id: 'eg-crystal-purple', name: 'EG Crystal Purple', type: 'mechvibes' },
+  { id: 'eg-oreo', name: 'EG Oreo', type: 'mechvibes' },
+  { id: 'holy-pandas', name: 'Holy Pandas', type: 'mechvibes' },
+  { id: 'mxblack-travel', name: 'Cherry MX Black (Travel)', type: 'mechvibes' },
+  { id: 'mxblue-travel', name: 'Cherry MX Blue (Travel)', type: 'mechvibes' },
+  { id: 'mxbrown-travel', name: 'Cherry MX Brown (Travel)', type: 'mechvibes' },
+  { id: 'nk-cream', name: 'NK Cream', type: 'mechvibes' },
+  { id: 'topre-purple-hybrid-pbt', name: 'Topre Purple Hybrid (PBT)', type: 'mechvibes' },
+  { id: 'turquoise', name: 'Turquoise', type: 'mechvibes' }
 ];
 
-// Populate sound selector
+// Filter valid sound profiles
+const soundProfiles = allSoundProfiles.filter(profile => validateSoundProfile(profile.id));
+
+console.log('Valid sound profiles:', soundProfiles.map(p => p.id));
+
+// Populate sound selector with valid profiles only
 soundProfiles.forEach(profile => {
   const option = document.createElement('option');
   option.value = profile.id;
@@ -42,20 +92,34 @@ soundProfiles.forEach(profile => {
   soundSelector.appendChild(option);
 });
 
-// Set initial sound profile
-soundSelector.value = store.get('selectedSound');
+// Set initial sound profile (fallback to first valid profile if current selection is invalid)
+let selectedSound = store.get('selectedSound');
+if (!soundProfiles.some(p => p.id === selectedSound)) {
+  selectedSound = soundProfiles[0]?.id || '';
+  store.set('selectedSound', selectedSound);
+}
+soundSelector.value = selectedSound;
 
-// Switch descriptions
+// Switch descriptions (only for valid profiles)
 const switchDescriptions = {
-  'cherry-mx-black-abs': 'Classic Cherry MX Black switches with ABS keycaps - smooth linear feel with a clean, deep sound.',
-  'akko-silver': 'Budget-friendly linear switch with a light, crisp sound. Great for gaming.',
-  'gateron-black': 'Premium linear switch known for its deep, satisfying sound and buttery-smooth feel.',
-  'alpaca': 'Smooth linear switch with a clean, satisfying sound profile. Popular in custom keyboards.',
-  'tangerine': 'Premium linear switch with a distinctive high-pitched "clacky" sound. Very smooth operation.',
-  'nk-cream': 'Self-lubricating linear switch with a unique "creamy" sound signature.',
-  'boba-u4t': 'Popular tactile switch known for its "thocky" sound and strong tactile feedback.',
-  'holy-panda': 'Legendary tactile switch with a distinctive sound and sharp tactile bump.',
-  'click': 'Basic click sound for a classic mechanical keyboard feel.'
+  'cherrymx-black-abs': 'Classic Cherry MX Black switches with ABS keycaps - smooth linear feel with a clean, deep sound.',
+  'cherrymx-black-pbt': 'Cherry MX Black switches with PBT keycaps - smooth linear feel with a deeper, more solid sound.',
+  'cherrymx-blue-abs': 'Cherry MX Blue switches with ABS keycaps - tactile and clicky with a sharp, high-pitched sound.',
+  'cherrymx-blue-pbt': 'Cherry MX Blue switches with PBT keycaps - tactile and clicky with a deeper click sound.',
+  'cherrymx-brown-abs': 'Cherry MX Brown switches with ABS keycaps - light tactile bump with a softer sound profile.',
+  'cherrymx-brown-pbt': 'Cherry MX Brown switches with PBT keycaps - light tactile bump with a deeper, more solid sound.',
+  'cherrymx-red-abs': 'Cherry MX Red switches with ABS keycaps - light linear feel with a clean sound.',
+  'cherrymx-red-pbt': 'Cherry MX Red switches with PBT keycaps - light linear feel with a deeper sound profile.',
+  'cream-travel': 'NovelKeys Cream switches optimized for travel keyboards - unique creamy sound signature.',
+  'eg-crystal-purple': 'EG Crystal Purple switches - tactile switches with a unique crystal-like sound.',
+  'eg-oreo': 'EG Oreo switches - tactile switches with a balanced, cookie-like sound profile.',
+  'holy-pandas': 'Holy Panda switches - legendary tactile switches with a distinctive "thocky" sound.',
+  'mxblack-travel': 'Cherry MX Black switches optimized for travel keyboards - deeper sound profile.',
+  'mxblue-travel': 'Cherry MX Blue switches optimized for travel keyboards - sharper click sound.',
+  'mxbrown-travel': 'Cherry MX Brown switches optimized for travel keyboards - softer tactile sound.',
+  'nk-cream': 'NovelKeys Cream switches - self-lubricating linear switches with a unique creamy sound.',
+  'topre-purple-hybrid-pbt': 'Topre Purple Hybrid switches with PBT keycaps - unique electro-capacitive feel with a deep sound.',
+  'turquoise': 'Turquoise switches - unique switch with a fresh, crisp sound profile.'
 };
 
 // Initialize audio context with error handling

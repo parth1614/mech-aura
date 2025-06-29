@@ -10,7 +10,7 @@ const store = new Store({
   defaults: {
     isEnabled: true,
     volume: 1.0,
-    selectedSound: 'cherry-mx-black-abs',
+    selectedSound: 'cherrymx-black-abs',
     autoStart: true
   }
 });
@@ -111,7 +111,7 @@ function playSound() {
 
 function loadSoundConfig(soundProfile) {
   try {
-    const soundDir = path.join(__dirname, '../assets/sounds', soundProfile);
+    const soundDir = path.join(__dirname, '../assets/sounds/audio', soundProfile);
     const configPath = path.join(soundDir, 'config.json');
 
     console.log('Checking sound configuration:', {
@@ -122,11 +122,21 @@ function loadSoundConfig(soundProfile) {
     });
 
     if (fs.existsSync(configPath)) {
-      // Mechvibes-style sound pack
       const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      const soundPath = path.join(soundDir, config.sound);
 
-      console.log('Found Mechvibes config:', {
+      // Handle different sound file structures
+      let soundPath;
+      if (fs.existsSync(path.join(soundDir, 'press'))) {
+        // Travel kit case with press/release folders
+        soundPath = path.join(soundDir, 'press', 'GENERIC_R0.mp3');
+      } else if (config.sound) {
+        // Single sound file case
+        soundPath = path.join(soundDir, config.sound);
+      } else {
+        throw new Error(`No valid sound file found in ${soundDir}`);
+      }
+
+      console.log('Found sound configuration:', {
         configFile: config,
         soundPath,
         exists: fs.existsSync(soundPath)
@@ -141,26 +151,6 @@ function loadSoundConfig(soundProfile) {
         config,
         soundPath: path.resolve(soundPath) // Use absolute path
       };
-    } else {
-      // Legacy single-sound format
-      const mp3Path = path.join(soundDir + '.mp3');
-      console.log('Checking legacy sound:', {
-        mp3Path,
-        exists: fs.existsSync(mp3Path)
-      });
-
-      if (fs.existsSync(mp3Path)) {
-        return {
-          type: 'legacy',
-          soundPath: path.resolve(mp3Path) // Use absolute path
-        };
-      } else if (soundProfile === 'click') {
-        const clickPath = createClickSound();
-        return {
-          type: 'click',
-          soundPath: path.resolve(clickPath) // Use absolute path
-        };
-      }
     }
 
     throw new Error(`No valid sound configuration found for profile: ${soundProfile}`);

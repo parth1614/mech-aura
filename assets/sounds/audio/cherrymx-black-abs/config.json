@@ -3,7 +3,7 @@
   "name": "CherryMX Black - ABS keycaps",
   "key_define_type": "single",
   "includes_numpad": false,
-  "sound": "src_audio_cherrymx-black-abs_sound.ogg",
+  "sound": "sound.ogg",
   "defines": {
     "1": [
       2926,
