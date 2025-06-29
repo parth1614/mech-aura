@@ -25,7 +25,7 @@ let currentSoundConfig = null;
 let autoLauncher = null;
 try {
   autoLauncher = new AutoLaunch({
-    name: 'MechNerd',
+    name: 'Mech Aura',
     path: process.execPath,
     isHidden: true
   });
@@ -262,7 +262,7 @@ function createTray() {
       }
     ]);
 
-    tray.setToolTip('MechNerd');
+    tray.setToolTip('MechAura');
     tray.setContextMenu(contextMenu);
   } catch (error) {
     console.error('Error creating tray:', error);

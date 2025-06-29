@@ -23,7 +23,7 @@ let currentSoundConfig: any = null;
 
 // Initialize auto-launcher
 const autoLauncher = new AutoLaunch({
-  name: 'MechNerd',
+  name: 'MechAura',
   path: app.getPath('exe'),
 });
 
@@ -158,7 +158,7 @@ function createTray() {
     }
   ]);
 
-  tray.setToolTip('MechNerd');
+  tray.setToolTip('MechAura');
   tray.setContextMenu(contextMenu);
 }
 

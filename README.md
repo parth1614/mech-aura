@@ -1,4 +1,4 @@
-# MechNerd
+# MechAura
 
 A mechanical keyboard sound simulator for macOS and Windows. Get the satisfying click-clack sound of mechanical switches while typing on any keyboard!
 
@@ -16,7 +16,7 @@ A mechanical keyboard sound simulator for macOS and Windows. Get the satisfying 
 
 1. Download the latest release for your platform from the Releases page
 2. Run the installer
-3. Launch MechNerd from your applications
+3. Launch mechaura from your applications
 
 ### Building from Source
 
@@ -27,7 +27,7 @@ Prerequisites:
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/mechnerd.git
-cd mechnerd
+cd mechaura
 
 # Install dependencies
 npm install
@@ -41,7 +41,7 @@ npm run make
 
 ## Usage
 
-1. After installation, MechNerd will appear in your system tray
+1. After installation, mechaura will appear in your system tray
 2. Click the tray icon to access quick toggles
 3. Open settings to:
    - Choose your preferred keyboard sound
